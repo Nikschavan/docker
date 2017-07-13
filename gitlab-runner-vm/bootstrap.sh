@@ -84,8 +84,8 @@ do_install() {
     apt-get update && apt-get -y upgrade
     apt-get -y install mc htop ntpdate git curl wget openssh-server
 
-    # Install docker
-    wget -qO- https://get.docker.com/ | sh
+    # Install docker if not found
+    docker >/dev/null 2>&1 || { wget -qO- https://get.docker.com/ | sh; }
 
     # Install multi-runner
     curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-ci-multi-runner/script.deb.sh | sudo bash
@@ -110,10 +110,11 @@ do_install() {
     sed -i -- "s/concurrent = 1/concurrent = $CONCURRENT/g" /etc/gitlab-runner/config.toml
 
     cronjob="#!/bin/bash\n"
-    for phpver in 5.2 5.3 5.4 5.5 5.6 7.0
-    do
-        cronjob+="docker pull tetraweb/php:$phpver\n"
-    done
+#    Automatic updates of images seems to be working in gitlab-runner
+#    for phpver in 5.3 5.4 5.5 5.6 7.0
+#    do
+#        cronjob+="docker pull tetraweb/php:$phpver\n"
+#    done
 
     # Cleanup orphaned images
     cronjob+="docker rmi \$(docker images | grep none | awk '{print \$3}')\n"
